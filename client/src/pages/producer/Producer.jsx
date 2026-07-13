@@ -22,7 +22,7 @@ const Producers = ({ viewState, editState, addState }) => {
 
   useEffect(() => {
     fetchProducers();
-  });
+  },[]);
 
   const filteredProducers = producers.filter((producer) =>
     producer.name?.toLowerCase().includes(filter.name?.toLowerCase() || ""),

@@ -9,8 +9,7 @@ exports.getAllMovies = async (req, res) => {
       filter.name = name;
     }
 
-    const offset = page * limit;
-
+    const offset = (page - 1) * limit;
     const movies = await Movie.find(filter, limit, offset);
 
     const db = require("../../database/db");
@@ -59,7 +58,71 @@ exports.getMovieById = async (req, res) => {
 
 exports.createMovie = async (req, res) => {
   try {
-    const { name, yearOfRelease, plot, producer, actors } = req.body;
+    const { name, yearOfRelease, plot, producer } = req.body;
+
+    let { actors } = req.body;
+
+    if (!Array.isArray(actors)) {
+      actors = actors ? [actors] : [];
+    }
+
+    // Movie name
+    if (!name || !name.trim()) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "Movie name is required",
+      });
+    }
+
+    if (name.trim().length > 100) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "Movie name cannot exceed 100 characters",
+      });
+    }
+
+    // Year validation
+    const currentYear = new Date().getFullYear();
+
+    if (!yearOfRelease || yearOfRelease < 1888 || yearOfRelease > currentYear) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: `Year must be between 1888 and ${currentYear}`,
+      });
+    }
+
+    // Plot validation
+    if (!plot || plot.trim().length < 10) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "Plot must contain at least 10 characters",
+      });
+    }
+
+    // Producer validation
+    if (!producer) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "Producer is required",
+      });
+    }
+
+    // Actor validation
+    if (actors.length === 0) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "At least one actor is required",
+      });
+    }
+    if (!Array.isArray(actors)) {
+      actors = actors ? [actors] : [];
+    }
 
     let posterUrl = req.body.poster;
 
@@ -70,6 +133,7 @@ exports.createMovie = async (req, res) => {
     }
 
     if (name && name.length <= 30) {
+      console.log("2");
       const existing = await Movie.find({ name });
       if (existing.length > 0) {
         return sendResponse(res, {
@@ -88,7 +152,6 @@ exports.createMovie = async (req, res) => {
       producer,
       actors,
     });
-
     sendResponse(res, {
       statusCode: 201,
       data: movie,

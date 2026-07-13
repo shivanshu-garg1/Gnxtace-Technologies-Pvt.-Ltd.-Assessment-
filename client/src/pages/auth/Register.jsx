@@ -19,24 +19,42 @@ const Register = () => {
   const { toast, showToast } = Common();
 
   const onFinish = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await RegisterUser({ name, email, password });
-      showToast({
-        message: res?.message,
-        type: res.status,
-      });
-      navigate("/login");
-    } catch (err) {
-      showToast({
-        message: err.response?.data?.message || "Something went wrong",
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  e.preventDefault();
+
+  if (password !== confirmPassword) {
+    showToast({
+      message: "Passwords do not match",
+      type: "error",
+    });
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const res = await RegisterUser({
+      name,
+      email,
+      password,
+      confirmPassword,
+    });
+
+    showToast({
+      message: res?.message,
+      type: res.status,
+    });
+
+    navigate("/login");
+  } catch (err) {
+    showToast({
+      message: err.response?.data?.message || "Something went wrong",
+      type: "error",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="register-wrapper">

@@ -7,10 +7,60 @@ const generateToken = (id) => {
 };
 
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, confirmPassword } = req.body;
 
   try {
-    const userExists = await User.findOne({ email });
+    if (!name || !email || !password || !confirmPassword) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "All fields are required",
+      });
+    }
+
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (trimmedName.length < 3 || trimmedName.length > 50) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "Name must be between 3 and 50 characters",
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(trimmedEmail)) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "Please enter a valid email address",
+      });
+    }
+
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message:
+          "Password must be at least 8 characters and include uppercase, lowercase, number, and special character",
+      });
+    }
+
+    // Confirm password
+    if (password !== confirmPassword) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "Passwords do not match",
+      });
+    }
+
+    const userExists = await User.findOne({ email: trimmedEmail });
 
     if (userExists) {
       return sendResponse(res, {
@@ -20,9 +70,13 @@ exports.register = async (req, res) => {
       });
     }
 
-    const user = await User.create({ name, email, password });
+    const user = await User.create({
+      name: trimmedName,
+      email: trimmedEmail,
+      password,
+    });
 
-    sendResponse(res, {
+    return sendResponse(res, {
       statusCode: 201,
       data: {
         id: user.id,
@@ -33,8 +87,9 @@ exports.register = async (req, res) => {
       message: "User registered successfully",
     });
   } catch (err) {
-    console.error("Register Error:", err);
-    sendResponse(res, {
+    console.error(err);
+
+    return sendResponse(res, {
       statusCode: 500,
       status: "error",
       message: err.message,
@@ -46,7 +101,27 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    if (!email || !password) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "Email and password are required",
+      });
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(trimmedEmail)) {
+      return sendResponse(res, {
+        statusCode: 400,
+        status: "error",
+        message: "Please enter a valid email address",
+      });
+    }
+
+    const user = await User.findOne({ email: trimmedEmail });
 
     if (!user || !(await User.comparePassword(password, user.password))) {
       return sendResponse(res, {
@@ -56,7 +131,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    sendResponse(res, {
+    return sendResponse(res, {
       data: {
         id: user.id,
         name: user.name,
@@ -66,8 +141,9 @@ exports.login = async (req, res) => {
       message: "Login successful",
     });
   } catch (err) {
-    console.error("Login Error:", err);
-    sendResponse(res, {
+    console.error(err);
+
+    return sendResponse(res, {
       statusCode: 500,
       status: "error",
       message: err.message,

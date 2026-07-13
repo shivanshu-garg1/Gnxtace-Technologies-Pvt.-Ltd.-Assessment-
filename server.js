@@ -2,7 +2,7 @@ const app = require("./src/app");
 const { PORT } = require("./config/config.js");
 const db = require("./database/db");
 
-const port = PORT || 3000;
+const port = PORT;
 
 console.log("Checking database connection and running migrations...");
 

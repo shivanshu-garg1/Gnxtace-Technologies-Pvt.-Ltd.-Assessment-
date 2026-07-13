@@ -36,7 +36,7 @@ exports.protect = async (req, res, next) => {
       });
     }
 
-    delete user.password;
+    // delete user.password;
     req.user = user;
     next();
   } catch (err) {

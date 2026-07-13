@@ -78,12 +78,12 @@ const AddMovie = () => {
       data.append("yearOfRelease", formData.yearOfRelease);
       data.append("plot", formData.plot);
       data.append("producer", formData.producer);
-      formData.actors.forEach((id) => data.append("actors[]", id));
+      formData.actors.forEach((id) => data.append("actors", id));
       if (imageFile) data.append("poster", imageFile);
 
       const res = await CreateMovie(data);
       if (res.status == "success") {
-        const list = [res, ...movies];
+const list = [res.data, ...movies];
         updateMovies(list);
         navigate(-1);
         showToast({
